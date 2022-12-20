@@ -87,9 +87,7 @@ def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path):
     TARGET_FREQ = 16000
 
     if Z_FRAMERATE == TARGET_FREQ:
-        # Remove the last sample. I think the problem here is mainly the encoding was
-        # done wrong.
-        W = Z[:-1]
+        W = Z
     else:
         print("Resampling")
         U = scipy.signal.resample(Z, int( float(TARGET_FREQ) / float(f.getframerate()) * float(Z.size)  )  )
@@ -142,16 +140,7 @@ def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path):
 
 if __name__=="__main__":
     
-    # Do a transformation
-    wav_to_tw7(pathlib.Path("Wav", "S2.wav"), pathlib.Path("3.tw7"))
+    raise Exception("wav_to_tw7 should be called as a function only")
 
 
-    # Now confirm using hexdump comparison
-    
-    DIR = tempfile.mkdtemp()
-
-    os.system('hexdump -C {0} > {1}'.format('S2_Orgnl.tw7', os.path.join(DIR, "1.hex")))
-    os.system('hexdump -C {0} > {1}'.format('3.tw7', os.path.join(DIR, "2.hex")))
-
-    os.system('meld {0} {1}'.format(os.path.join(DIR, "1.hex"), os.path.join(DIR, "2.hex")))
 

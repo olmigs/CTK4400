@@ -34,6 +34,5 @@ def tw7_to_wav(INPUT : pathlib.Path, OUTPUT : pathlib.Path):
 
 if __name__=="__main__":
     
-    tw7_to_wav("S2_Orgnl.tw7", pathlib.Path("Wav", "S2.wav"))
-
+    raise Exception("tw7_to_wav should be called as a function only")
 
