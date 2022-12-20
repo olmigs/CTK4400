@@ -3,14 +3,13 @@ Pull out a Wave from a TW7 file
 """
 
 
-from matplotlib import pyplot as plt
-import numpy
+
 import wave
 import struct
-
 import pathlib
 
-
+# pip install numpy
+import numpy
 
 
 def tw7_to_wav(INPUT : pathlib.Path, OUTPUT : pathlib.Path):
