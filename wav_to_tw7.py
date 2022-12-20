@@ -22,25 +22,40 @@ import scipy.signal
 
 
 
-def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path):
+def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path, SLOT : int = 1):
 
-    LEN = 0x9090
+    if SLOT not in [1, 2]:
+        raise Exception("SLOT needs to be either 1 or 2")
+
+    #LEN = 0x9090
     PERIOD = 625.
 
 
-
-    #Z = numpy.frombuffer(X[0x176:], dtype=numpy.int8)
-
-
-    Y = bytearray(b'\x00' * LEN)
-
-
-    for I in range(LEN):
-        A = int(127. * math.sin(   float(I)*2.*math.pi / float(PERIOD)  ))
-        if A < 0:
-            A = A + 256
+    with wave.open(str(INPUT), "rb") as f:
+        print(f.getsampwidth())
+        print(f.getframerate())
+        print("0x{0:X}".format(f.getnframes()))
         
-        Y[I] = A
+        
+        C = f.readframes(f.getnframes())
+        Z_FRAMERATE = f.getframerate()
+        
+        
+    print(len(C))
+    
+    LEN = len(C)
+
+
+
+    #Y = bytearray(b'\x00' * LEN)
+
+
+    #for I in range(LEN):
+    #    A = int(127. * math.sin(   float(I)*2.*math.pi / float(PERIOD)  ))
+    #    if A < 0:
+    #        A = A + 256
+    #    
+    #    Y[I] = A
         
 
     B = b"TW7FCTK-4400"
@@ -48,9 +63,15 @@ def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path):
     B += b"\x00" * 0xFC
 
 
-    B += b"\xDB\xD4\x50\x97\x69" + b"S2:Orgnl        "
+    if SLOT == 1:
+        B += b"\x4F\x62\x0E\xF6\x89" + b"S1:Orgnl        "
+        B += struct.pack("<2H", 0xE9, 0xE8)
+    elif SLOT == 2:
+        B += b"\xDB\xD4\x50\x97\x69" + b"S2:Orgnl        "
+        B += struct.pack("<2H", 0xEF, 0xE8)
+    else:
+        raise Exception
 
-    B += struct.pack("<2H", 0xEF, 0xE8)
     B += struct.pack("<3I", 0x20, 0x20, 0)
     B += b"\x00\x00\x00"
 
@@ -65,21 +86,6 @@ def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path):
     B += struct.pack("<IH", 0, 2)
     B += b"\xa1\x53"
     B += struct.pack("<IH", 0x80023C, 0)
-
-    with wave.open(str(INPUT), "rb") as f:
-        print(f.getsampwidth())
-        print(f.getframerate())
-        print("0x{0:X}".format(f.getnframes()))
-        
-        
-        C = f.readframes(f.getnframes())
-        Z_FRAMERATE = f.getframerate()
-        
-        
-    print(len(C))
-
-
-    #print(C[0x8000:0x8200].hex(" ").upper())
 
 
     Z = (numpy.frombuffer(C, dtype=numpy.uint8) - 128).astype(numpy.int8)   # zero-positioned
@@ -115,24 +121,11 @@ def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path):
     print(max(W))
     print(min(W))
 
-
-
-
-    #f2 = wave.open("R2.wav", "wb")
-    #f2.setnchannels(1)
-    #f2.setsampwidth(1)
-    #f2.setframerate(TARGET_FREQ)
-
-    #f2.writeframes(bytes(W))
-
-    #f2.close()
-
     B += bytes(W)
 
 
     with open(OUTPUT, "wb") as f4:
         f4.write(B)
-
 
 
 

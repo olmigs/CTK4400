@@ -5,6 +5,7 @@ import os
 import shutil
 import pathlib
 import tempfile
+import subprocess
 
 from tw7_to_wav import tw7_to_wav
 from wav_to_tw7 import wav_to_tw7
@@ -15,10 +16,14 @@ def compare_files(F1 : pathlib.Path, F2 : pathlib.Path):
     
     DIR = tempfile.mkdtemp()
 
-    os.system('hexdump -C {0} > {1}'.format(str(F1), os.path.join(DIR, "1.hex")))
-    os.system('hexdump -C {0} > {1}'.format(str(F2), os.path.join(DIR, "2.hex")))
-
-    os.system('meld {0} {1}'.format(os.path.join(DIR, "1.hex"), os.path.join(DIR, "2.hex")))
+    
+    with open(pathlib.Path(DIR, "1.hex"), "w") as f1:
+        subprocess.run(['hexdump', '-C', F1], stdout = f1)
+    with open(pathlib.Path(DIR, "2.hex"), "w") as f2:
+        subprocess.run(['hexdump', '-C', F2], stdout = f2)
+    
+    subprocess.run(['meld', pathlib.Path(DIR, "1.hex"), pathlib.Path(DIR, "2.hex")])
+    
 
 
 
@@ -34,6 +39,22 @@ os.mkdir("Wav")
 
 # Do the first one
 
+tw7_to_wav("S1_Orgnl.tw7", pathlib.Path("Wav", "S1.wav"))
+wav_to_tw7(pathlib.Path("Wav", "S1.wav"), "2.tw7", 1)
+compare_files("S1_Orgnl.tw7", "2.tw7")
+
+
+# Do the second one
+
 tw7_to_wav("S2_Orgnl.tw7", pathlib.Path("Wav", "S2.wav"))
-wav_to_tw7(pathlib.Path("Wav", "S2.wav"), "3.tw7")
+wav_to_tw7(pathlib.Path("Wav", "S2.wav"), "3.tw7", 2)
 compare_files("S2_Orgnl.tw7", "3.tw7")
+
+
+# Do the third one
+
+tw7_to_wav(pathlib.Path("Batch 2", "S2_Orgnl.tw7"), pathlib.Path("Wav", "S2_2.wav"))
+wav_to_tw7(pathlib.Path("Wav", "S2_2.wav"), "4.tw7", 2)
+compare_files(pathlib.Path("Batch 2", "S2_Orgnl.tw7"), "4.tw7")
+
+
