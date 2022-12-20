@@ -7,6 +7,7 @@ import math
 import sys
 import struct
 import wave
+import tempfile
 
 import os
 import os.path
@@ -58,13 +59,14 @@ B += b"\x00\x00"
 B += struct.pack("<IIH", LEN - 0x28, 0x20000, LEN - 0x18)
 
 
-with wave.open(os.path.join("..", "S2.wav"), "rb") as f:
+with wave.open(os.path.join("Wav", "S2.wav"), "rb") as f:
     print(f.getsampwidth())
     print(f.getframerate())
     print("0x{0:X}".format(f.getnframes()))
     
     
     C = f.readframes(f.getnframes())
+    Z_FRAMERATE = f.getframerate()
     
     
 print(len(C))
@@ -75,28 +77,31 @@ print(len(C))
 
 Z = (numpy.frombuffer(C, dtype=numpy.uint8) - 128).astype(numpy.int8)   # zero-positioned
 
-TARGET_FREQ = 14250
+TARGET_FREQ = 16000
 
-U = scipy.signal.resample(Z, int( float(TARGET_FREQ) / float(f.getframerate()) * float(Z.size)  )  )
+if Z_FRAMERATE == TARGET_FREQ:
+    W = Z
+else:
+    U = scipy.signal.resample(Z, int( float(TARGET_FREQ) / float(f.getframerate()) * float(Z.size)  )  )
 
-print(U)
-print(max(U))
-print(min(U))
+    print(U)
+    print(max(U))
+    print(min(U))
 
-m = max(max(U), -min(U))
+    m = max(max(U), -min(U))
 
-if m <= 0:
-    raise Exception
+    if m <= 0:
+        raise Exception
 
-U = U * (127.5 / m)  # Scale to maximum extent
+    U = U * (127.5 / m)  # Scale to maximum extent
 
-V = U.astype(numpy.int8)
+    V = U.astype(numpy.int8)
 
-print(V)
-print(max(V))
-print(min(V))
+    print(V)
+    print(max(V))
+    print(min(V))
 
-W = (V + 128).astype(numpy.uint8)
+    W = (V + 128).astype(numpy.uint8)
 
 print(W)
 print(max(W))
@@ -121,5 +126,13 @@ with open("3.tw7", "wb") as f4:
     f4.write(B)
 
 
+
+DIR = tempfile.mkdtemp()
+
+
+os.system('hexdump -C {0} > {1}'.format('S2_Orgnl.tw7', os.path.join(DIR, "1.hex")))
+os.system('hexdump -C {0} > {1}'.format('3.tw7', os.path.join(DIR, "2.hex")))
+
+os.system('meld {0} {1}'.format(os.path.join(DIR, "1.hex"), os.path.join(DIR, "2.hex")))
 
 
