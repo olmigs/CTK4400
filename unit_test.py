@@ -8,6 +8,7 @@ import tempfile
 import subprocess
 
 from tw7_to_wav import tw7_to_wav
+from dw7_to_wav import dw7_to_wav
 from wav_to_tw7 import wav_to_tw7
 
 
@@ -57,4 +58,8 @@ tw7_to_wav(pathlib.Path("Batch 2", "S2_Orgnl.tw7"), pathlib.Path("Wav", "S2_2.wa
 wav_to_tw7(pathlib.Path("Wav", "S2_2.wav"), "4.tw7", 2)
 compare_files(pathlib.Path("Batch 2", "S2_Orgnl.tw7"), "4.tw7")
 
+
+# Do drums
+
+dw7_to_wav(pathlib.Path("Batch 3", "Sample Drum Kit Pitch test.dw7"), pathlib.Path("Wav", "DW.wav"))
 
