@@ -1,19 +1,23 @@
 
 import struct
 import wave
+import pathlib
 import numpy
 import scipy
 import scipy.signal
 
 
 
-def wav_to_dw7(STRUCT):
+def wav_to_dw7(STRUCT, OUTPUT : pathlib.Path):
   
     S = set()
     for KEY in STRUCT:
         S.add(STRUCT[KEY]['file'])
   
     FILES = list(S)
+    
+    if len(FILES) not in [1,2,3,4,5,6,7,8]:
+        raise Exception(f"Need between 1 and 8 distinct file name inputs. Found {len(FILES)} distinct file names.")
     
     LENGTHS = []
     BINARIES = []
@@ -35,6 +39,9 @@ def wav_to_dw7(STRUCT):
         print(len(C))
         
         LEN = len(C)
+    
+        Z = (numpy.frombuffer(C, dtype=numpy.uint8) - 128).astype(numpy.int8)   # zero-positioned
+    
     
         if Z_FRAMERATE == TARGET_FREQ:
             W = Z
@@ -75,7 +82,7 @@ def wav_to_dw7(STRUCT):
     K = 0x23   # Incrementing counter. Probably can be anything??
     
     for U in range(128):
-        if U in STRUCT:
+        if str(U) in STRUCT:
             B += struct.pack("<HHHHHHHHHBBBB", 0x80+K, 0x7F, 0x80+K, 0x7F, 0x80+K, 0x7F, 0x80+K, 0x7F, 0, 0xC8, 0x40, 0, 0x20)
             K += 1
         else:
@@ -84,11 +91,12 @@ def wav_to_dw7(STRUCT):
     B += b'\x40\x40\x40\x80\x4A\x40\x40\x40\x40\x80\x40\x40\x00\x00'
     
     for U in range(128):
-        if U in STRUCT:
-            SAMPLE_IDX = FILES.index(STRUCT[U])
-            B += bytes.fromhex("00 D8 00 20 00 00 00 20 00 00 00 20 00 00 01 00 80 3F 00 00 80 3F FF 03 80 3E 40 00 00 00 FF 01 00 00 64 00 00 00 20 03 00 00 20 03") + struct.pack("<H", 0x80+SAMPLE_IDX) + bytes.fromhex("00 7F 02 00 02 7F 00 7F 01 00")
+        if str(U) in STRUCT:
+            SAMPLE_IDX = FILES.index(STRUCT[str(U)]['file'])
+            PITCH_SHIFT = STRUCT[str(U)]['pitch_shift']
+            B += struct.pack("2b", 0, int(2.*PITCH_SHIFT)) + bytes.fromhex("00 20 00 00 00 20 00 00 00 20 00 00 01 00 80 3F 00 00 80 3F FF 03 80 3E 40 00 00 00 FF 01 00 00 64 00 00 00 20 03 00 00 20 03") + struct.pack("<H", 0x80+SAMPLE_IDX) + bytes.fromhex("00 7F 02 00 02 7F 00 7F 01 00")
         else:
-            B += bytes.fromhex("00 00 00 20 00 00 00 20 00 00 00 20 00 00 01 00 80 3F 00 00 80 3F FF 03 80 3E 40 00 00 00 FF 01 00 00 64 00 00 00 20 03 00 00 20 03") + struct.pack("<H", 0)  + bytes.fromhex("00 7F 02 00 02 7F 00 7F 01 00")
+            B += struct.pack("2b", 0, 0)                   + bytes.fromhex("00 20 00 00 00 20 00 00 00 20 00 00 01 00 80 3F 00 00 80 3F FF 03 80 3E 40 00 00 00 FF 01 00 00 64 00 00 00 20 03 00 00 20 03") + struct.pack("<H", 0)  + bytes.fromhex("00 7F 02 00 02 7F 00 7F 01 00")
     
     for U in range(8):
         if U < len(FILES):
@@ -106,9 +114,9 @@ def wav_to_dw7(STRUCT):
     for BB in BINARIES:
         B += BB
 
-    with open("1.dw7", "wb") as f:
+    with open(str(OUTPUT), "wb") as f:
         f.write(b"DW7FCTK-4400")
-        f.write(struct.pack("<II", len(B), 0)
+        f.write(struct.pack("<II", len(B), 0))
         for U in range(64):
             if U < len(LENGTHS):
                 f.write(struct.pack("<I", LENGTHS[U]))
@@ -120,7 +128,15 @@ def wav_to_dw7(STRUCT):
 
 if __name__=="__main__":
   
-    S = {60: {'file': "S1.wav", 'pitch_shift': -20}}
+    # A dictionary of key values mapped to sounds.
+    #
+    #  Key:   MIDI pitch of the key which produces the sound. (E.g. 60 is the
+    #                Middle C key).
+    #  file:  File name, relative to current working directory. Up to 8 distinct
+    #                file names are accepted.
+    #  pitch_shift:   values from -64 to +63. Units possibly semitones?
+    #
+    S = {'60': {'file': "S1.wav", 'pitch_shift': -20}}
   
   
-    wav_to_dw7(S)
+    wav_to_dw7(S, "1.dw7")
