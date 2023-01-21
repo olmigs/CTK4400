@@ -24,11 +24,8 @@ import scipy.signal
 
 def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path, SLOT : int = 1):
 
-    if SLOT not in [1, 2]:
-        raise Exception("SLOT needs to be either 1 or 2")
-
-    #LEN = 0x9090
-    PERIOD = 625.
+    if SLOT not in (1, 2, 3, 4, 5):
+        raise Exception("SLOT needs to be in 1 - 5")
 
 
     with wave.open(str(INPUT), "rb") as f:
@@ -45,17 +42,6 @@ def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path, SLOT : int = 1):
     
     LEN = len(C)
 
-
-
-    #Y = bytearray(b'\x00' * LEN)
-
-
-    #for I in range(LEN):
-    #    A = int(127. * math.sin(   float(I)*2.*math.pi / float(PERIOD)  ))
-    #    if A < 0:
-    #        A = A + 256
-    #    
-    #    Y[I] = A
         
 
     B = b"TW7FCTK-4400"
@@ -84,7 +70,7 @@ def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path, SLOT : int = 1):
 
 
     if SLOT in (1, 2, 3, 4, 5, 6, 7, 8):
-        B += MAGIC_NUMBERS[SLOT-1][0] + b"S{0:d}:Orgnl        ".format(SLOT)
+        B += MAGIC_NUMBERS[SLOT-1][0] + "S{0:d}:Orgnl        ".format(SLOT).encode('latin-1')
         B += struct.pack("<2H", MAGIC_NUMBERS[SLOT-1][1], 0xE8)
     else:
         raise Exception
@@ -105,12 +91,14 @@ def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path, SLOT : int = 1):
     B += struct.pack("<IH", 0x80023C, 0)
 
 
+
     Z = (numpy.frombuffer(C, dtype=numpy.uint8) - 128).astype(numpy.int8)   # zero-positioned
 
-    TARGET_FREQ = 21333
+
+    TARGET_FREQ = 22050
 
     if Z_FRAMERATE == TARGET_FREQ:
-        W = Z
+        W = (Z + 0).astype(numpy.uint8)
     else:
         print("Resampling")
         U = scipy.signal.resample(Z, int( float(TARGET_FREQ) / float(f.getframerate()) * float(Z.size)  )  )
@@ -132,7 +120,7 @@ def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path, SLOT : int = 1):
         print(max(V))
         print(min(V))
 
-        W = (V + 128).astype(numpy.uint8)
+        W = (V + 0).astype(numpy.uint8)
 
     print(W)
     print(max(W))
