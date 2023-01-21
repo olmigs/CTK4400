@@ -76,7 +76,6 @@ def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path, SLOT : int = 1):
         ( b"\xDB\xD4\x50\x97\x69",  0xEF ),   # SLOT 2
         ( b"\xE9\xCE\x01\xC3\x71",  0x0E ),   # SLOT 3
         ( b"\xBE\x18\xB0\x0E\xD4",  0x5C ),   # SLOT 4
-        ( b"\xBE\x18\xB0\x0E\xD4",  0x5C ),   # SLOT 4
         ( b"\xE4\xB0\x31\xA1\xC2",  0x6C ),   # SLOT 5
         ( b"\x8A\x41\x47\x02\x43",  0x00 ),   # SLOT 6
         ( b"\x51\x67\x47\x02\x40",  0x3F ),   # SLOT 7
