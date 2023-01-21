@@ -41,6 +41,11 @@ def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path, SLOT : int = 1):
     print(len(C))
     
     LEN = len(C)
+    
+    if LEN > 0x3FFFF:
+        # This is approximately 10s at 22050Hz. It may be worth trying longer than
+        # this to see if it works?
+        raise Exception(f"Input wave has {LEN} sample points which is too long!")
 
         
 
@@ -83,10 +88,9 @@ def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path, SLOT : int = 1):
 
     B += struct.pack("<II", LEN - 0x28, 0x20000)
     B += b"\x00"
-    B += struct.pack("<H", LEN - 0x18)
-    B += b"\x00"
-    B += struct.pack("<H", LEN - 0x08)
-    B += struct.pack("<IH", 0, 2)
+    B += struct.pack("<I", LEN - 0x18)[:3]  # Lowest 3 bytes only
+    B += struct.pack("<I", LEN - 0x08)
+    B += struct.pack("<HH", 0, 2)
     B += b"\xa1\x53"
     B += struct.pack("<IH", 0x80023C, 0)
 
