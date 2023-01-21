@@ -63,12 +63,30 @@ def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path, SLOT : int = 1):
     B += b"\x00" * 0xFC
 
 
-    if SLOT == 1:
-        B += b"\x4F\x62\x0E\xF6\x89" + b"S1:Orgnl        "
-        B += struct.pack("<2H", 0xE9, 0xE8)
-    elif SLOT == 2:
-        B += b"\xDB\xD4\x50\x97\x69" + b"S2:Orgnl        "
-        B += struct.pack("<2H", 0xEF, 0xE8)
+
+    """
+    What are these? They appear to depend only on the position of the sample (i.e.
+    whether it's S1, S2, etc.), and not on the waveform data at all. They may be
+    magic numbers, but they may be something else. Note that there are 8 positions
+    in a .AL7 file so 8 entries are given here, but the CTK-4400 only supports a
+    maximum of 5 samples with content.    
+    """
+    MAGIC_NUMBERS = [
+        ( b"\x4F\x62\x0E\xF6\x89",  0xE9 ),   # SLOT 1
+        ( b"\xDB\xD4\x50\x97\x69",  0xEF ),   # SLOT 2
+        ( b"\xE9\xCE\x01\xC3\x71",  0x0E ),   # SLOT 3
+        ( b"\xBE\x18\xB0\x0E\xD4",  0x5C ),   # SLOT 4
+        ( b"\xBE\x18\xB0\x0E\xD4",  0x5C ),   # SLOT 4
+        ( b"\xE4\xB0\x31\xA1\xC2",  0x6C ),   # SLOT 5
+        ( b"\x8A\x41\x47\x02\x43",  0x00 ),   # SLOT 6
+        ( b"\x51\x67\x47\x02\x40",  0x3F ),   # SLOT 7
+        ( b"\x93\xAD\xFF\xFF\x25",  0x53 ),   # SLOT 8
+    ]
+
+
+    if SLOT in (1, 2, 3, 4, 5, 6, 7, 8):
+        B += MAGIC_NUMBERS[SLOT-1][0] + b"S{0:d}:Orgnl        ".format(SLOT)
+        B += struct.pack("<2H", MAGIC_NUMBERS[SLOT-1][1], 0xE8)
     else:
         raise Exception
 
@@ -90,7 +108,7 @@ def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path, SLOT : int = 1):
 
     Z = (numpy.frombuffer(C, dtype=numpy.uint8) - 128).astype(numpy.int8)   # zero-positioned
 
-    TARGET_FREQ = 16000
+    TARGET_FREQ = 21333
 
     if Z_FRAMERATE == TARGET_FREQ:
         W = Z
