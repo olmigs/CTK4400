@@ -39,8 +39,46 @@ def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path, SLOT : int = 1):
         
         
     print(len(C))
-    
-    LEN = len(C)
+
+    Z = (numpy.frombuffer(C, dtype=numpy.uint8) - 128).astype(numpy.int8)   # zero-positioned
+
+
+    TARGET_FREQ = 22050
+
+    if Z_FRAMERATE == TARGET_FREQ:
+        W = (Z + 0).astype(numpy.uint8)
+    else:
+        print("Resampling")
+        U = scipy.signal.resample(Z, int( float(TARGET_FREQ) / float(f.getframerate()) * float(Z.size)  )  )
+
+        print(U)
+        print(max(U))
+        print(min(U))
+
+        m = max(max(U), -min(U))
+
+        if m <= 0:
+            raise Exception
+
+        U = U * (127.5 / m)  # Scale to maximum extent
+
+        V = U.astype(numpy.int8)
+
+        print(V)
+        print(max(V))
+        print(min(V))
+
+        W = (V + 0).astype(numpy.uint8)
+
+    print(W)
+    print(max(W))
+    print(min(W))
+
+
+
+
+
+    LEN = len(bytes(W))
     
     if LEN > 0x3FFFF:
         # This is approximately 10s at 22050Hz. It may be worth trying longer than
@@ -95,40 +133,6 @@ def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path, SLOT : int = 1):
     B += struct.pack("<IH", 0x80023C, 0)
 
 
-
-    Z = (numpy.frombuffer(C, dtype=numpy.uint8) - 128).astype(numpy.int8)   # zero-positioned
-
-
-    TARGET_FREQ = 22050
-
-    if Z_FRAMERATE == TARGET_FREQ:
-        W = (Z + 0).astype(numpy.uint8)
-    else:
-        print("Resampling")
-        U = scipy.signal.resample(Z, int( float(TARGET_FREQ) / float(f.getframerate()) * float(Z.size)  )  )
-
-        print(U)
-        print(max(U))
-        print(min(U))
-
-        m = max(max(U), -min(U))
-
-        if m <= 0:
-            raise Exception
-
-        U = U * (127.5 / m)  # Scale to maximum extent
-
-        V = U.astype(numpy.int8)
-
-        print(V)
-        print(max(V))
-        print(min(V))
-
-        W = (V + 0).astype(numpy.uint8)
-
-    print(W)
-    print(max(W))
-    print(min(W))
 
     B += bytes(W)
 
