@@ -1,0 +1,117 @@
+TW7 contains a recording of a single pitched sound sample for the CTK-4400 keyboard.
+
+All values are in hexadecimal format.
+
+LEN is the length in bytes of the waveform recording portion of the file.
+
+
+
+
+Byte offset                 Value
+in file
+------------                ------
+
+000                         54  'T'
+001                         57  'W'
+002                         37  '7'
+003                         46  'F'
+004                         43  'C'
+005                         54  'T'
+006                         4B  'K'
+007                         2D  '-'
+008                         34  '4'
+009                         34  '4'
+00A                         30  '0'
+00B                         30  '0'
+00C-00F                     LEN+62 (4 bytes, little endian). This is the
+                               total length in bytes of the TW7 file excluding
+                               the 114-byte header
+010-013                     00 00 00 00
+014-017                     LEN  (4 bytes, little endian)
+018-113                     All 00's
+114-118                     "Magic Number 1". 5 bytes. See comment in wav_to_tw7.py
+                                     for more about this value
+119-128                     Tone Name. 16 ASCII characters.
+129                         "Magic Number 2". 1 byte. See comment in wav_to_tw7.py
+                                     for more about this value
+12A                         00
+12B                         E8
+12C                         00
+12D                         20
+12E                         00
+12F                         00
+130                         00
+131                         20
+132                         00
+133                         00
+134                         00
+135                         00
+136                         00
+137                         00
+138                         00
+139                         00
+13A                         00
+13B                         00
+13C                         22
+13D                         00
+13E                         00
+13F                         00
+140                         00
+141                         00
+142                         00
+143                         00
+144                         22
+145                         00
+146                         00
+147                         00
+148                         00
+149                         00
+14A                         00
+14B                         00
+14C                         22
+14D                         00
+14E                         00
+14F                         00
+150                         00
+151                         00
+152                         00
+153                         00
+154                         22
+155                         00
+156                         00
+157                         00
+158                         00
+159                         00
+15A-15C                     LEN-28 (3 bytes, little endian)
+15D                         00
+15E                         00
+15F                         00
+160                         02
+161                         00
+162                         00
+163-165                     LEN-18 (3 bytes, little endian)
+166-168                     LEN-8 (3 bytes, little endian)
+169                         00
+16A                         00
+16B                         00
+16C                         02
+16D                         00
+16E                         A1
+16F                         53
+170                         3C
+171                         02
+172                         80
+173                         00
+174                         00
+175                         00
+176-END                     LEN bytes of PCM sound data in 8-bit signed
+                            format (Min-Mid-Max values are 80-00-7F).
+
+                            Note that Microsoft Wave files (.WAV files)
+                            use 8-bit unsigned format (Min-Mid-Max is 00-7F-FF)
+                            and so need to be re-encoded to be used here.
+                            16-bit and 32-bit Wave files use signed
+                            formats (8000-0000-7FFF and 80000000-00000000-7FFFFFFF
+                            respectively).
+
+                            Sample rate is approximately 22kHz (to be confirmed!)
