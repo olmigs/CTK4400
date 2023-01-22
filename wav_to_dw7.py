@@ -22,7 +22,7 @@ def wav_to_dw7(STRUCT, OUTPUT : pathlib.Path):
     LENGTHS = []
     BINARIES = []
     
-    TARGET_FREQ = 16000
+    TARGET_FREQ = 22050
     
     for FF in FILES:
         
@@ -44,7 +44,7 @@ def wav_to_dw7(STRUCT, OUTPUT : pathlib.Path):
     
     
         if Z_FRAMERATE == TARGET_FREQ:
-            W = Z
+            W = (Z + 0).astype(numpy.uint8)
         else:
             print("Resampling")
             U = scipy.signal.resample(Z, int( float(TARGET_FREQ) / float(f.getframerate()) * float(Z.size)  )  )
@@ -66,7 +66,7 @@ def wav_to_dw7(STRUCT, OUTPUT : pathlib.Path):
             print(max(V))
             print(min(V))
 
-            W = (V + 128).astype(numpy.uint8)
+            W = (V + 0).astype(numpy.uint8)
 
         print(W)
         print(max(W))
@@ -83,10 +83,10 @@ def wav_to_dw7(STRUCT, OUTPUT : pathlib.Path):
     
     for U in range(128):
         if str(U) in STRUCT:
-            B += struct.pack("<HHHHHHHHHBBBB", 0x80+K, 0x7F, 0x80+K, 0x7F, 0x80+K, 0x7F, 0x80+K, 0x7F, 0, 0xC8, 0x40, 0, 0x20)
+            B += struct.pack("<HHHHHHHHHBBBB", 0x80+K, 0x7F, 0x80+K, 0x7F, 0x80+K, 0x7F, 0x80+K, 0x7F,  0, 0xC8, 0x40, 0, 0x20)
             K += 1
         else:
-            B += struct.pack("<HHHHHHHHHBBBB", 0, 0x7F, 0, 0x7F, 0, 0x7F, 0, 0x7F, 0, 0x7F, 0x40, 0, 0x60)
+            B += struct.pack("<HHHHHHHHHBBBB",    0,   0x7F,    0,   0x7F,    0,   0x7F,    0,   0x7F,  0, 0x7F, 0x40, 0, 0x60)
     
     B += b'\x40\x40\x40\x80\x4A\x40\x40\x40\x40\x80\x40\x40\x00\x00'
     
@@ -105,11 +105,11 @@ def wav_to_dw7(STRUCT, OUTPUT : pathlib.Path):
             LEN = 0x5270   # Probably can be anything?
             
         B += bytes.fromhex("00 E8 00 20 00 00 00 20 00 00 00 00 00 00 00 00 00 00 22 00 00 00 00 00 00 00 22 00 00 00 00 00 00 00 22 00 00 00 00 00 00 00 22 00 00 00 00 00") + \
-                      struct.pack("<H", LEN-0x28) + \
-                      bytes.fromhex("00 00 00 00 02 00 00 ") + \
-                      struct.pack("<H", LEN-0x18) + b'\x00' + \
-                      struct.pack("<H", LEN-0x08) + \
-                      bytes.fromhex("00 00 00 00 02 00 A1 53 3C 02 80 00 00 00")
+                      struct.pack("<I", LEN-0x28) + \
+                      bytes.fromhex("00 00 02 00 00 ") + \
+                      struct.pack("<I", LEN-0x18)[:3] + \
+                      struct.pack("<I", LEN-0x08) + \
+                      bytes.fromhex("00 00 02 00 A1 53 3C 02 80 00 00 00")
 
     for BB in BINARIES:
         B += BB
