@@ -38,37 +38,58 @@ def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path, SLOT : int = 1):
         Z_FRAMERATE = f.getframerate()
         
         
-    print(len(C))
+        print(len(C))
+        
+        if f.getsampwidth() == 1:   # 8-Bit unsigned
+            Z = (numpy.frombuffer(C, dtype=numpy.uint8) - 128).astype(numpy.int8)
+        elif f.getsampwidth() == 2:   # 16-Bit signed
+            Z = numpy.frombuffer(C, dtype=numpy.int16)
+        elif f.getsampwidth() == 4:   # 32-Bit signed
+            Z = numpy.frombuffer(C, dtype=numpy.int32)
+        else:
+            raise Exception("Only 8-, 16- and 32-bit PCM wave formats supported")
+        
+        
+        
+        # Choose the first channel only. From a stereo signal, this will be the
+        # left one.
+        # A stereo-to-mono conversion would be better, but this script is really
+        # intended for mono inputs -- just do the simplest thing possible here.
 
-    Z = (numpy.frombuffer(C, dtype=numpy.uint8) - 128).astype(numpy.int8)   # zero-positioned
+        if f.getnchannels() != 1:
+            Z = Z[::f.getnchannels()]
+
 
 
     TARGET_FREQ = 22050
 
     if Z_FRAMERATE == TARGET_FREQ:
-        W = (Z + 0).astype(numpy.uint8)
+
+        # No re-sampling required, we're already at the correct sample rate
+        U = Z
+
     else:
         print("Resampling")
         U = scipy.signal.resample(Z, int( float(TARGET_FREQ) / float(f.getframerate()) * float(Z.size)  )  )
 
-        print(U)
-        print(max(U))
-        print(min(U))
+    print(U)
+    print(max(U))
+    print(min(U))
 
-        m = max(max(U), -min(U))
+    m = max(max(U), -min(U))
 
-        if m <= 0:
-            raise Exception
+    if m <= 0:
+        raise Exception
 
-        U = U * (127.5 / m)  # Scale to maximum extent
+    U = U * (127.5 / m)  # Scale to maximum extent
 
-        V = U.astype(numpy.int8)
+    V = U.astype(numpy.int8)
 
-        print(V)
-        print(max(V))
-        print(min(V))
+    print(V)
+    print(max(V))
+    print(min(V))
 
-        W = (V + 0).astype(numpy.uint8)
+    W = (V + 0).astype(numpy.uint8)
 
     print(W)
     print(max(W))
