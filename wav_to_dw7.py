@@ -8,8 +8,13 @@ import scipy.signal
 
 
 
-def wav_to_dw7(STRUCT, OUTPUT : pathlib.Path):
-  
+def wav_to_dw7(STRUCT, OUTPUT : pathlib.Path, SLOT : int = 1):
+
+
+    if SLOT not in (1, 2, 3):
+        raise Exception("SLOT needs to be in 1 - 3")
+
+
     S = set()
     for KEY in STRUCT:
         X = STRUCT[KEY].get('file', None)
@@ -27,7 +32,8 @@ def wav_to_dw7(STRUCT, OUTPUT : pathlib.Path):
     TARGET_FREQ = 22050
     
     for FF in FILES:
-        
+
+
         with wave.open(str(FF), "rb") as f:
             print(f.getsampwidth())
             print(f.getframerate())
@@ -38,49 +44,107 @@ def wav_to_dw7(STRUCT, OUTPUT : pathlib.Path):
             Z_FRAMERATE = f.getframerate()
             
             
-        print(len(C))
-        
-        LEN = len(C)
-    
-        Z = (numpy.frombuffer(C, dtype=numpy.uint8) - 128).astype(numpy.int8)   # zero-positioned
-    
-    
+            print(len(C))
+            
+            if f.getsampwidth() == 1:   # 8-Bit unsigned
+                Z = (numpy.frombuffer(C, dtype=numpy.uint8) - 128).astype(numpy.int8)
+            elif f.getsampwidth() == 2:   # 16-Bit signed
+                Z = numpy.frombuffer(C, dtype=numpy.int16)
+            elif f.getsampwidth() == 4:   # 32-Bit signed
+                Z = numpy.frombuffer(C, dtype=numpy.int32)
+            else:
+                raise Exception("Only 8-, 16- and 32-bit PCM wave formats supported")
+            
+            
+            
+            # Choose the first channel only. From a stereo signal, this will be the
+            # left one.
+            # A stereo-to-mono conversion would be better, but this script is really
+            # intended for mono inputs -- just do the simplest thing possible here.
+
+            if f.getnchannels() != 1:
+                Z = Z[::f.getnchannels()]
+
+
+
         if Z_FRAMERATE == TARGET_FREQ:
-            W = (Z + 0).astype(numpy.uint8)
+
+            # No re-sampling required, we're already at the correct sample rate
+            U = Z
+
         else:
             print("Resampling")
-            U = scipy.signal.resample(Z, int( float(TARGET_FREQ) / float(f.getframerate()) * float(Z.size)  )  )
+            U = scipy.signal.resample(Z, int( float(TARGET_FREQ) / float(Z_FRAMERATE) * float(Z.size)  )  )
 
-            print(U)
-            print(max(U))
-            print(min(U))
+        print(U)
+        print(max(U))
+        print(min(U))
 
-            m = max(max(U), -min(U))
+        m = max(max(U), -min(U))
 
-            if m <= 0:
-                raise Exception
+        if m <= 0:
+            raise Exception
 
-            U = U * (127.5 / m)  # Scale to maximum extent
+        U = U * (127.5 / m)  # Scale to maximum extent
 
-            V = U.astype(numpy.int8)
+        V = U.astype(numpy.int8)
 
-            print(V)
-            print(max(V))
-            print(min(V))
+        print(V)
+        print(max(V))
+        print(min(V))
 
-            W = (V + 0).astype(numpy.uint8)
+        W = (V + 0).astype(numpy.uint8)
 
         print(W)
         print(max(W))
         print(min(W))
 
+
+
+        LEN = len(bytes(W))
+        
+        if LEN > 0x3FFFF:
+            # This is approximately 10s at 22050Hz. It may be worth trying longer than
+            # this to see if it works?
+            raise Exception(f"Input wave has {LEN} sample points which is too long!")
+
+
+
         BINARIES.append(bytes(W))
         LENGTHS.append(len(bytes(W)))
-    
-    
+
+
+
+
+
+    """
+    What are these? They appear to depend only on the position of the sample (i.e.
+    whether it's S1, S2, etc.), and not on the waveform data at all. They may be
+    magic numbers, but they may be something else. Note that there are 8 positions
+    in a .AL7 file so 8 entries are given here, but only the last 3 are
+    available for DW7 content.
+    """
+    MAGIC_NUMBERS = [
+        ( b"\x4F\x62\x0E\xF6\x89",  0xE9 ),   # SLOT 1
+        ( b"\xDB\xD4\x50\x97\x69",  0xEF ),   # SLOT 2
+        ( b"\xE9\xCE\x01\xC3\x71",  0x0E ),   # SLOT 3
+        ( b"\xBE\x18\xB0\x0E\xD4",  0x5C ),   # SLOT 4
+        ( b"\xE4\xB0\x31\xA1\xC2",  0x6C ),   # SLOT 5
+        ( b"\x8A\x41\x47\x02\x43",  0x00 ),   # SLOT 6
+        ( b"\x51\x67\x47\x02\x40",  0x3F ),   # SLOT 7
+        ( b"\x93\xAD\xFF\xFF\x25",  0x53 ),   # SLOT 8
+    ]
+
+
+
     B = b''
-    B += b'\x8A\x41\x47\x02\x43' + b'SmplDrm1        ' + b'\x00'
-    
+
+    if SLOT in (1, 2, 3):
+        B += MAGIC_NUMBERS[SLOT+5][0] + "SmplDrm{0:d}        ".format(SLOT).encode('latin-1')
+        B += struct.pack("<B", MAGIC_NUMBERS[SLOT+5][1])
+    else:
+        raise Exception
+
     K = 0x23   # Incrementing counter. Probably can be anything??
     
     for U in range(128):

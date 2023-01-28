@@ -118,8 +118,8 @@ def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path, SLOT : int = 1):
     What are these? They appear to depend only on the position of the sample (i.e.
     whether it's S1, S2, etc.), and not on the waveform data at all. They may be
     magic numbers, but they may be something else. Note that there are 8 positions
-    in a .AL7 file so 8 entries are given here, but the CTK-4400 only supports a
-    maximum of 5 samples with content.    
+    in a .AL7 file so 8 entries are given here, but only the first 5 are
+    available for TW7 content.
     """
     MAGIC_NUMBERS = [
         ( b"\x4F\x62\x0E\xF6\x89",  0xE9 ),   # SLOT 1
@@ -133,12 +133,13 @@ def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path, SLOT : int = 1):
     ]
 
 
-    if SLOT in (1, 2, 3, 4, 5, 6, 7, 8):
+    if SLOT in (1, 2, 3, 4, 5):
         B += MAGIC_NUMBERS[SLOT-1][0] + "S{0:d}:Orgnl        ".format(SLOT).encode('latin-1')
-        B += struct.pack("<2H", MAGIC_NUMBERS[SLOT-1][1], 0xE8)
+        B += struct.pack("<B", MAGIC_NUMBERS[SLOT-1][1])
     else:
         raise Exception
 
+    B += struct.pack("<3B", 0, 0xE8, 0)
     B += struct.pack("<3I", 0x20, 0x20, 0)
     B += b"\x00\x00\x00"
 
