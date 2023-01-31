@@ -59,7 +59,7 @@
     "57": {"file": "Wav/TONE.wav", "pitch_shift": -3.0},
     "58": {"file": "Wav/TONE.wav", "pitch_shift": -2.0},
     "59": {"file": "Wav/TONE.wav", "pitch_shift": -1.0},
-    "60": {"file": "Wav/TONE.wav", "pitch_shift": 0.0}
+    "60": {"file": "Wav/TONE.wav", "pitch_shift": 0.0},
     "61": {"file": "Wav/TONE.wav", "pitch_shift": 1.0},
     "62": {"file": "Wav/TONE.wav", "pitch_shift": 2.0},
     "63": {"file": "Wav/TONE.wav", "pitch_shift": 3.0},
@@ -123,8 +123,8 @@
    "121": {"file": "Wav/TONE.wav", "pitch_shift": 61.0},
    "122": {"file": "Wav/TONE.wav", "pitch_shift": 62.0},
    "123": {"file": "Wav/TONE.wav", "pitch_shift": 63.0},
-   "124": {"file": "", "pitch_shift": 0.0},
-   "125": {"file": "", "pitch_shift": 0.0},
-   "126": {"file": "", "pitch_shift": 0.0},
-   "127": {"file": "", "pitch_shift": 0.0}
+   "124": {},
+   "125": {},
+   "126": {},
+   "127": {}
 }
