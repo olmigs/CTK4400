@@ -125,23 +125,22 @@ def wav_to_dw7(STRUCT, OUTPUT : pathlib.Path, SLOT : int = 1):
     available for DW7 content.
     """
     MAGIC_NUMBERS = [
-        ( b"\x4F\x62\x0E\xF6\x89",  0xE9 ),   # SLOT 1
-        ( b"\xDB\xD4\x50\x97\x69",  0xEF ),   # SLOT 2
-        ( b"\xE9\xCE\x01\xC3\x71",  0x0E ),   # SLOT 3
-        ( b"\xBE\x18\xB0\x0E\xD4",  0x5C ),   # SLOT 4
-        ( b"\xE4\xB0\x31\xA1\xC2",  0x6C ),   # SLOT 5
-        ( b"\x8A\x41\x47\x02\x43",  0x00 ),   # SLOT 6
-        ( b"\x51\x67\x47\x02\x40",  0x3F ),   # SLOT 7
-        ( b"\x93\xAD\xFF\xFF\x25",  0x53 ),   # SLOT 8
+        ( bytes.fromhex("4F 62 0E F6 89"),  bytes.fromhex("E9") ),   # SLOT 1
+        ( bytes.fromhex("DB D4 50 97 69"),  bytes.fromhex("EF") ),   # SLOT 2
+        ( bytes.fromhex("E9 CE 01 C3 71"),  bytes.fromhex("0E") ),   # SLOT 3
+        ( bytes.fromhex("BE 18 B0 0E D4"),  bytes.fromhex("5C") ),   # SLOT 4
+        ( bytes.fromhex("E4 B0 31 A1 C2"),  bytes.fromhex("6C") ),   # SLOT 5
+        ( bytes.fromhex("8A 41 47 02 43"),  bytes.fromhex("00") ),   # SLOT 6
+        ( bytes.fromhex("51 67 47 02 40"),  bytes.fromhex("3F") ),   # SLOT 7
+        ( bytes.fromhex("93 AD FF FF 25"),  bytes.fromhex("53") ),   # SLOT 8
     ]
-
 
 
     B = b''
 
     if SLOT in (1, 2, 3):
         B += MAGIC_NUMBERS[SLOT+5][0] + "SmplDrm{0:d}        ".format(SLOT).encode('latin-1')
-        B += struct.pack("<B", MAGIC_NUMBERS[SLOT+5][1])
+        B += MAGIC_NUMBERS[SLOT+5][1]
     else:
         raise Exception
 
