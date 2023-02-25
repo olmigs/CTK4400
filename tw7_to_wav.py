@@ -23,7 +23,7 @@ def tw7_to_wav(INPUT : pathlib.Path, OUTPUT : pathlib.Path):
     f2 = wave.open(str(OUTPUT), "wb")
     f2.setnchannels(1)
     f2.setsampwidth(1)
-    f2.setframerate(22050)
+    f2.setframerate(21800)
 
     f2.writeframes(bytes(Z))
 
