@@ -1,0 +1,281 @@
+DW7 contains a recording of between 1 and 8 pitched sound samples for the CTK-4400 keyboard, and
+assigns them to keys in a "drum kit" arrangement.
+
+All values are in hexadecimal format.
+
+LEN[I] is the length in bytes of the Ith waveform recording (I=0...7).
+
+
+
+
+Byte offset                 Value
+in file
+------------                ------
+
+==================== START OF HEADER (OFFSET: 0)  ===========================================
+
+000                         44  'D'
+001                         57  'W'
+002                         37  '7'
+003                         46  'F'
+004                         43  'C'
+005                         54  'T'
+006                         4B  'K'
+007                         2D  '-'
+008                         34  '4'
+009                         34  '4'
+00A                         30  '0'
+00B                         30  '0'
+00C-00F                     LEN[0]+LEN[1]+LEN[2]+LEN[3]+LEN[4]+LEN[5]+LEN[6]+LEN[7]+D84 (4 bytes,
+                               little endian). This is the total length in bytes of the DW7 file
+                               excluding this 114-byte header
+010-013                     00 00 00 00
+014-017                     LEN[0]  (4 bytes, little endian).
+018-01B                     LEN[1]  (4 bytes, little endian). All 00's if there is no second sample
+01C-01F                     LEN[2]  (4 bytes, little endian). All 00's if there is no third sample
+020-023                     LEN[3]  (4 bytes, little endian). All 00's if there is no 4th sample
+024-027                     LEN[4]  (4 bytes, little endian). All 00's if there is no 5th sample
+028-02B                     LEN[5]  (4 bytes, little endian). All 00's if there is no 6th sample
+02C-02F                     LEN[6]  (4 bytes, little endian). All 00's if there is no 7th sample
+030-033                     LEN[7]  (4 bytes, little endian). All 00's if there is no 8th sample
+034-113                     All 00's
+
+==================== END OF HEADER (OFFSET: 114) =============================================
+
+114-118                     "Magic Number 1". 5 bytes. See comment in wav_to_tw7.py
+                                     for more about this value
+119-128                     Tone Name. 16 ASCII characters.
+129                         "Magic Number 2". 1 byte. See comment in wav_to_tw7.py
+                                     for more about this value
+
+=================================================================================================
+====   The following 16 bytes are repeated 128 times, representing the 128 MIDI notes    ========
+====   with the first one representing MIDI note 0 (C-1) and the last one representing   ========
+====   MIDI note 7F (G9).                                                                ========
+
+A note can either be assigned to one of the up to 8 samples, or it can be left un-assigned.
+
+K is a number between 1 (or 0?) and 1FF that is defined for each note. Its value
+doesn't seem to matter, but it might need to be unique to each assigned note - still being
+determined. Best thing to do is make it sequential for each note (1, 2, 3, 4, etc....).
+
+=========== START OF 128x REPETITION (OFFSET: 12A)   =============================================
+
+12A+J*16 - 12B+J*16      8000+K if this note is assigned. K if not. (2-byte little-endian)
+12C+J*16                 7F
+12D+J*16                 00
+12E+J*16 - 12F+J*16      8000+K if this note is assigned. 0 if not. (2-byte little-endian)
+130+J*16                 7F
+131+J*16                 00
+132+J*16 - 133+J*16      8000+K if this note is assigned. 0 if not. (2-byte little-endian)
+134+J*16                 7F
+135+J*16                 00
+136+J*16 - 137+J*16      8000+K if this note is assigned. 0 if not. (2-byte little-endian)
+138+J*16                 7F
+139+J*16                 00
+13A+J*16                 00
+13B+J*16                 00
+13C+J*16                 C8 if this note is assigned, 7F if not
+13D+J*16                 40
+13E+J*16                 00
+13F+J*16                 20 if this note is assigned, 60 if not
+
+=========== END OF 128x REPETITION  (OFFSET:   C29) =============================================
+
+
+
+======= START OF VIBRATO/TREMOLO SECTION (OFFSET: C2A)   =========================
+
+
+C2A                      40
+C2B                      40
+C2C                      40
+C2D                      80
+C2E                      4A
+C2F                      40
+C30                      40
+C31                      40
+C32                      40
+C33                      80
+C34                      40
+C35                      40
+C36                      00
+C37                      00
+
+======= END OF VIBRATO/TREMOLO SECTION (OFFSET: C37)     =========================
+
+
+=================================================================================================
+====   The following 38 bytes are repeated 128 times, corresponding to 128 MIDI notes.
+
+
+======= START OF 128x REPETITION  (OFFSET: C38)         ===========================
+
+
+C38+J*38                 00
+C39+J*38                 Pitch shift to apply to the sample, in half-semitones (quarter tones). Signed
+                         8-bit value, so 00 is no shift, FE is shift down 1 semitone, etc. 00 if no
+                         sample assigned.
+C3A+J*38                 00
+C3B+J*38                 20
+C3C+J*38                 00
+C3D+J*38                 00
+C3E+J*38                 00
+C3F+J*38                 20
+C40+J*38                 00
+C41+J*38                 00
+C42+J*38                 00
+C43+J*38                 20
+C44+J*38                 00
+C45+J*38                 00
+C46+J*38                 01
+C47+J*38                 00
+C48+J*38                 80
+C49+J*38                 3F
+C4A+J*38                 00
+C4B+J*38                 00
+C4C+J*38                 80
+C4D+J*38                 3F
+C4E+J*38                 FF
+C4F+J*38                 03
+C50+J*38                 80
+C51+J*38                 3E
+C52+J*38                 40
+C53+J*38                 00
+C54+J*38                 00
+C55+J*38                 00
+C56+J*38                 FF
+C57+J*38                 01
+C58+J*38                 00
+C59+J*38                 00
+C5A+J*38                 64
+C5B+J*38                 00
+C5C+J*38                 00
+C5D+J*38                 00
+C5E+J*38                 20
+C5F+J*38                 03
+C60+J*38                 00
+C61+J*38                 00
+C62+J*38                 20
+C63+J*38                 03
+C64+J*38                 Sample the note is assigned to. 00 is first sample, 01 is second,
+                         up to 07 is eighth. 00 if not assigned.
+C65+J*38                 80 if the note is assigned to a sample, 00 otherwise.
+C66+J*38                 00
+C67+J*38                 7F
+C68+J*38                 02
+C69+J*38                 00
+C6A+J*38                 02
+C6B+J*38                 7F
+C6C+J*38                 00
+C6D+J*38                 7F
+C6E+J*38                 01
+C6F+J*38                 00
+
+
+======= END OF 128x REPETITION  (OFFSET: 2837)         =============================
+
+
+
+
+=================================================================================================
+====   The following 4C bytes are repeated 8 times, representing the up to 8 samples   ========
+====   in the kit. If there is not a sample, LEN[I] can probably be anything but it is   ========
+====   usually given a value of 5270.                                                   ========
+
+
+=========== START OF 8x REPETITION (OFFSET: 2838)   ===============================================
+
+
+
+2838+I*4C                   00
+2839+I*4C                   E8
+283A+I*4C                   00
+283B+I*4C                   20
+283C+I*4C                   00
+283D+I*4C                   00
+283E+I*4C                   00
+283F+I*4C                   20
+2840+I*4C                   00
+2841+I*4C                   00
+2842+I*4C                   00
+2843+I*4C                   00
+2844+I*4C                   00
+2845+I*4C                   00
+2846+I*4C                   00
+2847+I*4C                   00
+2848+I*4C                   00
+2849+I*4C                   00
+284A+I*4C                   22
+284B+I*4C                   00
+284C+I*4C                   00
+284D+I*4C                   00
+284E+I*4C                   00
+284F+I*4C                   00
+2850+I*4C                   00
+2851+I*4C                   00
+2852+I*4C                   22
+2853+I*4C                   00
+2854+I*4C                   00
+2855+I*4C                   00
+2856+I*4C                   00
+2857+I*4C                   00
+2858+I*4C                   00
+2859+I*4C                   00
+285A+I*4C                   22
+285B+I*4C                   00
+285C+I*4C                   00
+285D+I*4C                   00
+285E+I*4C                   00
+285F+I*4C                   00
+2860+I*4C                   00
+2861+I*4C                   00
+2862+I*4C                   22
+2863+I*4C                   00
+2864+I*4C                   00
+2865+I*4C                   00
+2866+I*4C                   00
+2867+I*4C                   00
+2868+I*4C                   LEN[I]-28 (3 bytes, little endian). 5248 if there is no I'th sample
+2869+I*4C                   00
+286A+I*4C                   00
+286B+I*4C                   00
+286C+I*4C                   02
+286D+I*4C                   00
+286E+I*4C                   00
+286F+I*4C                   LEN[I]-18 (3 bytes, little endian). 5258 if there is no I'th sample
+2870+I*4C                   LEN[I]-8 (3 bytes, little endian). 5268 if there is no I'th sample
+2871+I*4C                   00
+2872+I*4C                   00
+2873+I*4C                   00
+2874+I*4C                   02
+2875+I*4C                   00
+2876+I*4C                   A1
+2877+I*4C                   53
+2878+I*4C                   3C
+2879+I*4C                   02
+287A+I*4C                   80
+287B+I*4C                   00
+287C+I*4C                   00
+287D+I*4C                   00
+
+
+
+=========== END OF 8x REPETITION (OFFSET: E97)   ===============================================
+
+
+
+
+E98-END                     Up to 8 samples of PCM sound data.
+
+                            Each one is LEN[I] bytes in length in 8-bit signed
+                            format (Min-Mid-Max values are 80-00-7F).
+
+                            Note that Microsoft Wave files (.WAV files)
+                            use 8-bit unsigned format (Min-Mid-Max is 00-7F-FF)
+                            and so need to be re-encoded to be used here.
+                            16-bit and 32-bit Wave files use signed
+                            formats (8000-0000-7FFF and 80000000-00000000-7FFFFFFF
+                            respectively).
+
+                            Sample rate (at Middle-C pitch) is approximately 21.80kHz.
