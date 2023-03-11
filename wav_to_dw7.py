@@ -167,7 +167,7 @@ def wav_to_dw7(STRUCT, OUTPUT : pathlib.Path, SLOT : int = 1):
         if U < len(FILES):
             LEN = LENGTHS[U]
         else:
-            LEN = 0x5270   # Probably can be anything?
+            LEN = 0x526C   # Probably can be anything?
             
         B += bytes.fromhex("00 E8 00 20 00 00 00 20 00 00 00 00 00 00 00 00 00 00 22 00 00 00 00 00 00 00 22 00 00 00 00 00 00 00 22 00 00 00 00 00 00 00 22 00 00 00 00 00") + \
                       struct.pack("<I", LEN-0x28) + \

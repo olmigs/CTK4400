@@ -3,7 +3,7 @@ assigns them to keys in a "drum kit" arrangement.
 
 All values are in hexadecimal format.
 
-LEN[I] is the length in bytes of the Ith waveform recording (I=0...7).
+LEN[I] is the length in bytes of the I'th waveform recording (I=0...7).
 
 
 
@@ -26,18 +26,18 @@ in file
 009                         34  '4'
 00A                         30  '0'
 00B                         30  '0'
-00C-00F                     LEN[0]+LEN[1]+LEN[2]+LEN[3]+LEN[4]+LEN[5]+LEN[6]+LEN[7]+D84 (4 bytes,
+00C-00F                     LEN[0]+LEN[1]+LEN[2]+LEN[3]+LEN[4]+LEN[5]+LEN[6]+LEN[7]+2984 (4 bytes,
                                little endian). This is the total length in bytes of the DW7 file
                                excluding this 114-byte header
 010-013                     00 00 00 00
 014-017                     LEN[0]  (4 bytes, little endian).
-018-01B                     LEN[1]  (4 bytes, little endian). All 00's if there is no second sample
-01C-01F                     LEN[2]  (4 bytes, little endian). All 00's if there is no third sample
-020-023                     LEN[3]  (4 bytes, little endian). All 00's if there is no 4th sample
-024-027                     LEN[4]  (4 bytes, little endian). All 00's if there is no 5th sample
-028-02B                     LEN[5]  (4 bytes, little endian). All 00's if there is no 6th sample
-02C-02F                     LEN[6]  (4 bytes, little endian). All 00's if there is no 7th sample
-030-033                     LEN[7]  (4 bytes, little endian). All 00's if there is no 8th sample
+018-01B                     LEN[1]  (4 bytes, little endian). 0 if there is no second sample
+01C-01F                     LEN[2]  (4 bytes, little endian). 0 if there is no third sample
+020-023                     LEN[3]  (4 bytes, little endian). 0 if there is no 4th sample
+024-027                     LEN[4]  (4 bytes, little endian). 0 if there is no 5th sample
+028-02B                     LEN[5]  (4 bytes, little endian). 0 if there is no 6th sample
+02C-02F                     LEN[6]  (4 bytes, little endian). 0 if there is no 7th sample
+030-033                     LEN[7]  (4 bytes, little endian). 0 if there is no 8th sample
 034-113                     All 00's
 
 ==================== END OF HEADER (OFFSET: 114) =============================================
@@ -56,8 +56,8 @@ in file
 A note can either be assigned to one of the up to 8 samples, or it can be left un-assigned.
 
 K is a number between 1 (or 0?) and 1FF that is defined for each note. Its value
-doesn't seem to matter, but it might need to be unique to each assigned note - still being
-determined. Best thing to do is make it sequential for each note (1, 2, 3, 4, etc....).
+doesn't seem to matter, but it might need to be unique to each assigned note. Best thing to
+do is make it sequential for each note (1, 2, 3, 4, etc....).
 
 =========== START OF 128x REPETITION (OFFSET: 12A)   =============================================
 
@@ -114,8 +114,8 @@ C37                      00
 
 C38+J*38                 00
 C39+J*38                 Pitch shift to apply to the sample, in half-semitones (quarter tones). Signed
-                         8-bit value, so 00 is no shift, FE is shift down 1 semitone, etc. 00 if no
-                         sample assigned.
+                         8-bit value; 00 is no shift, FE is shift down 1 semitone, E8 is down 1 octave,
+                         etc. 00 if no sample assigned.
 C3A+J*38                 00
 C3B+J*38                 20
 C3C+J*38                 00
@@ -179,9 +179,9 @@ C6F+J*38                 00
 
 
 =================================================================================================
-====   The following 4C bytes are repeated 8 times, representing the up to 8 samples   ========
+====   The following 4C bytes are repeated 8 times, representing the up to 8 samples     ========
 ====   in the kit. If there is not a sample, LEN[I] can probably be anything but it is   ========
-====   usually given a value of 5270.                                                   ========
+====   usually given a value of 526C.                                                    ========
 
 
 =========== START OF 8x REPETITION (OFFSET: 2838)   ===============================================
@@ -236,37 +236,37 @@ C6F+J*38                 00
 2865+I*4C                   00
 2866+I*4C                   00
 2867+I*4C                   00
-2868+I*4C                   LEN[I]-28 (3 bytes, little endian). 5248 if there is no I'th sample
-2869+I*4C                   00
-286A+I*4C                   00
+2868+I*4C - 286A+I*4C       LEN[I]-28 (3 bytes, little endian). 5244 if there is no I'th sample
 286B+I*4C                   00
-286C+I*4C                   02
+286C+I*4C                   00
 286D+I*4C                   00
-286E+I*4C                   00
-286F+I*4C                   LEN[I]-18 (3 bytes, little endian). 5258 if there is no I'th sample
-2870+I*4C                   LEN[I]-8 (3 bytes, little endian). 5268 if there is no I'th sample
-2871+I*4C                   00
-2872+I*4C                   00
-2873+I*4C                   00
-2874+I*4C                   02
-2875+I*4C                   00
-2876+I*4C                   A1
-2877+I*4C                   53
-2878+I*4C                   3C
-2879+I*4C                   02
-287A+I*4C                   80
+286E+I*4C                   02
+286F+I*4C                   00
+2870+I*4C                   00
+2871+I*4C - 2873+I*4C       LEN[I]-18 (3 bytes, little endian). 5254 if there is no I'th sample
+2874+I*4C - 2876+I*4C       LEN[I]-8 (3 bytes, little endian). 5264 if there is no I'th sample
+2877+I*4C                   00
+2878+I*4C                   00
+2879+I*4C                   00
+287A+I*4C                   02
 287B+I*4C                   00
-287C+I*4C                   00
-287D+I*4C                   00
+287C+I*4C                   A1
+287D+I*4C                   53
+287E+I*4C                   3C
+287F+I*4C                   02
+2880+I*4C                   80
+2881+I*4C                   00
+2882+I*4C                   00
+2883+I*4C                   00
 
 
 
-=========== END OF 8x REPETITION (OFFSET: E97)   ===============================================
+=========== END OF 8x REPETITION (OFFSET: 2A97)   ===============================================
 
 
 
 
-E98-END                     Up to 8 samples of PCM sound data.
+2A98-END                    Up to 8 samples of PCM sound data.
 
                             Each one is LEN[I] bytes in length in 8-bit signed
                             format (Min-Mid-Max values are 80-00-7F).
