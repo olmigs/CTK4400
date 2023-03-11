@@ -148,7 +148,7 @@ def wav_to_dw7(STRUCT, OUTPUT : pathlib.Path, SLOT : int = 1):
     
     for U in range(128):
         if str(U) in STRUCT and STRUCT[str(U)].get('file', None) is not None:
-            B += struct.pack("<HHHHHHHHHBBBB", 0x80+K, 0x7F, 0x80+K, 0x7F, 0x80+K, 0x7F, 0x80+K, 0x7F,  0, 0xC8, 0x40, 0, 0x20)
+            B += struct.pack("<HHHHHHHHHBBBB", 0x8000+K, 0x7F, 0x8000+K, 0x7F, 0x8000+K, 0x7F, 0x8000+K, 0x7F,  0, 0xC8, 0x40, 0, 0x20)
             K += 1
         else:
             B += struct.pack("<HHHHHHHHHBBBB",    0,   0x7F,    0,   0x7F,    0,   0x7F,    0,   0x7F,  0, 0x7F, 0x40, 0, 0x60)
@@ -159,7 +159,7 @@ def wav_to_dw7(STRUCT, OUTPUT : pathlib.Path, SLOT : int = 1):
         if str(U) in STRUCT and STRUCT[str(U)].get('file', None) is not None:
             SAMPLE_IDX = FILES.index(STRUCT[str(U)]['file'])
             PITCH_SHIFT = STRUCT[str(U)]['pitch_shift']
-            B += struct.pack("2b", 0, int(2.*PITCH_SHIFT)) + bytes.fromhex("00 20 00 00 00 20 00 00 00 20 00 00 01 00 80 3F 00 00 80 3F FF 03 80 3E 40 00 00 00 FF 01 00 00 64 00 00 00 20 03 00 00 20 03") + struct.pack("<H", 0x80+SAMPLE_IDX) + bytes.fromhex("00 7F 02 00 02 7F 00 7F 01 00")
+            B += struct.pack("2b", 0, int(2.*PITCH_SHIFT)) + bytes.fromhex("00 20 00 00 00 20 00 00 00 20 00 00 01 00 80 3F 00 00 80 3F FF 03 80 3E 40 00 00 00 FF 01 00 00 64 00 00 00 20 03 00 00 20 03") + struct.pack("<H", 0x8000+SAMPLE_IDX) + bytes.fromhex("00 7F 02 00 02 7F 00 7F 01 00")
         else:
             B += struct.pack("2b", 0, 0)                   + bytes.fromhex("00 20 00 00 00 20 00 00 00 20 00 00 01 00 80 3F 00 00 80 3F FF 03 80 3E 40 00 00 00 FF 01 00 00 64 00 00 00 20 03 00 00 20 03") + struct.pack("<H", 0)  + bytes.fromhex("00 7F 02 00 02 7F 00 7F 01 00")
     
