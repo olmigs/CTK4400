@@ -1,7 +1,7 @@
-DW7 contains a recording of between 1 and 8 pitched sound samples for the CTK-4400 keyboard, and
-assigns them to keys in a "drum kit" arrangement.
+DW7 contains a recording of between 1 and 8 pitched or unpitched sound samples for
+the CTK-4400 keyboard, and assigns them to keys in a "drum kit" arrangement.
 
-All values are in hexadecimal format.
+All values below are in hexadecimal format.
 
 LEN[I] is the length in bytes of the I'th waveform recording (I=0...7).
 
@@ -278,4 +278,6 @@ C6F+J*38                 00
                             formats (8000-0000-7FFF and 80000000-00000000-7FFFFFFF
                             respectively).
 
-                            Sample rate (at Middle-C pitch) is approximately 21.80kHz.
+                            Sample rate is approximately 21.41kHz for sounds recorded
+                            at Middle-C pitch (C4), or 36.01kHz for sounds recorded at
+                            Concert A pitch (A4).

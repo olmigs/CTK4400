@@ -114,5 +114,6 @@ in file
                             formats (8000-0000-7FFF and 80000000-00000000-7FFFFFFF
                             respectively).
 
-                            Sample rate is approximately 21.80kHz for sounds recorded
-                            at Middle-C pitch.
+                            Sample rate is approximately 21.41kHz for sounds recorded
+                            at Middle-C pitch (C4), or 36.01kHz for sounds recorded at
+                            Concert A pitch (A4).

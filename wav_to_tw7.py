@@ -61,7 +61,7 @@ def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path, SLOT : int = 1):
 
 
 
-    TARGET_FREQ = 21800
+    TARGET_FREQ = 21410
 
     if Z_FRAMERATE == TARGET_FREQ:
 
@@ -102,7 +102,7 @@ def wav_to_tw7(INPUT : pathlib.Path, OUTPUT : pathlib.Path, SLOT : int = 1):
     LEN = len(bytes(W))
     
     if LEN > 0x3FFFF:
-        # This is approximately 10s at 21800Hz. It may be worth trying longer than
+        # This is approximately 10s at 21410Hz. It may be worth trying longer than
         # this to see if it works?
         raise Exception(f"Input wave has {LEN} sample points which is too long!")
 

@@ -29,7 +29,7 @@ def wav_to_dw7(STRUCT, OUTPUT : pathlib.Path, SLOT : int = 1):
     LENGTHS = []
     BINARIES = []
     
-    TARGET_FREQ = 21800
+    TARGET_FREQ = 21410
     
     for FF in FILES:
 
@@ -104,7 +104,7 @@ def wav_to_dw7(STRUCT, OUTPUT : pathlib.Path, SLOT : int = 1):
         LEN = len(bytes(W))
         
         if LEN > 0x3FFFF:
-            # This is approximately 10s at 21800Hz. It may be worth trying longer than
+            # This is approximately 10s at 21410Hz. It may be worth trying longer than
             # this to see if it works?
             raise Exception(f"Input wave has {LEN} sample points which is too long!")
 
