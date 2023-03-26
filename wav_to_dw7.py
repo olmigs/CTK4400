@@ -148,7 +148,7 @@ def wav_to_dw7(STRUCT, OUTPUT : pathlib.Path, SLOT : int = 1):
     
     for U in range(128):
         if str(U) in STRUCT and STRUCT[str(U)].get('file', None) is not None:
-            B += struct.pack("<HHHHHHHHHBBBB", 0x8000+K, 0x7F, 0x8000+K, 0x7F, 0x8000+K, 0x7F, 0x8000+K, 0x7F,  0, 0xC8, STRUCT[str(U)].get('pan', 0x40), 0, 0x20)
+            B += struct.pack("<HHHHHHHHHBBBB", 0x8000+K, 0x7F, 0x8000+K, 0x7F, 0x8000+K, 0x7F, 0x8000+K, 0x7F,  0, 0xC8, STRUCT[str(U)].get('pan', 0)+0x40, 0, 0x20)
             K += 1
         else:
             B += struct.pack("<HHHHHHHHHBBBB",    0,   0x7F,    0,   0x7F,    0,   0x7F,    0,   0x7F,  0, 0x7F, 0x40, 0, 0x60)
