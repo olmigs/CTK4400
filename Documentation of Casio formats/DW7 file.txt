@@ -75,8 +75,14 @@ do is make it sequential for each note (1, 2, 3, 4, etc....).
 139+J*16                 00
 13A+J*16                 00
 13B+J*16                 00
-13C+J*16                 C8 if this note is assigned, 7F if not
-13D+J*16                 PAN:  7-bit unsigned value. 00=full left, 40=centre, 7F=full right.
+13C+J*16                 VOL: takes values 00-FF, indicating output volume. A
+                                 value C8 is set by the keyboard to newly recorded
+                                 sounds so that value should be regarded as the
+                                 "Normal" or baseline setting. Values 01-FF then
+                                 correspond to -96dB -- +4dB.
+                              Set to 7F for unassigned notes.
+13D+J*16                 PAN:  7-bit unsigned value, indicating stereo panning.
+                                 00=full left, 40=centre, 7F=full right.
 13E+J*16                 00
 13F+J*16                 20 if this note is assigned, 60 if not
 

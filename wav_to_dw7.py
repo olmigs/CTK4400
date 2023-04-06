@@ -148,7 +148,7 @@ def wav_to_dw7(STRUCT, OUTPUT : pathlib.Path, SLOT : int = 1):
     
     for U in range(128):
         if str(U) in STRUCT and STRUCT[str(U)].get('file', None) is not None:
-            B += struct.pack("<HHHHHHHHHBBBB", 0x8000+K, 0x7F, 0x8000+K, 0x7F, 0x8000+K, 0x7F, 0x8000+K, 0x7F,  0, 0xC8, STRUCT[str(U)].get('pan', 0)+0x40, 0, 0x20)
+            B += struct.pack("<HHHHHHHHHBBBB", 0x8000+K, 0x7F, 0x8000+K, 0x7F, 0x8000+K, 0x7F, 0x8000+K, 0x7F,  0, min(255, round(200. * numpy.power(10., STRUCT[str(U)].get('vol', 0.0) / 40.)), STRUCT[str(U)].get('pan', 0)+0x40, 0, 0x20)
             K += 1
         else:
             B += struct.pack("<HHHHHHHHHBBBB",    0,   0x7F,    0,   0x7F,    0,   0x7F,    0,   0x7F,  0, 0x7F, 0x40, 0, 0x60)
@@ -201,8 +201,10 @@ if __name__=="__main__":
     #                file names are accepted.
     #  pitch_shift:   values from -64 to +63. Units semitones
     #  pan:           values from -64 (full left) to +63 (full right)
+    #  vol:           dB values (floating-point) from -92.0 to +4.2. Use -200. as
+    #                       the "off" (no sound) setting.
     #
-    S = {'60': {'file': "S1.wav", 'pitch_shift': -20, 'pan': -20}}
+    S = {'60': {'file': "S1.wav", 'pitch_shift': -20, 'pan': -20, 'vol': -20.}}
   
   
     wav_to_dw7(S, "1.dw7")
