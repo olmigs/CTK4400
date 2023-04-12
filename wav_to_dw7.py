@@ -73,7 +73,7 @@ def wav_to_dw7(STRUCT, OUTPUT : pathlib.Path, SLOT : int = 1):
             U = Z
 
         else:
-            print("Resampling")
+            print("Resampling from {0}".format(Z_FRAMERATE))
             U = scipy.signal.resample(Z, int( float(TARGET_FREQ) / float(Z_FRAMERATE) * float(Z.size)  )  )
 
         print(U)
@@ -148,10 +148,12 @@ def wav_to_dw7(STRUCT, OUTPUT : pathlib.Path, SLOT : int = 1):
     
     for U in range(128):
         if str(U) in STRUCT and STRUCT[str(U)].get('file', None) is not None:
-            B += struct.pack("<HHHHHHHHHBBBB", 0x8000+K, 0x7F, 0x8000+K, 0x7F, 0x8000+K, 0x7F, 0x8000+K, 0x7F,  0, min(255, round(200. * numpy.power(10., STRUCT[str(U)].get('vol', 0.0) / 40.))), STRUCT[str(U)].get('pan', 0)+0x40, 0, 0x20)
+            MOMENTARY = STRUCT[str(U)].get('momentary', 0)
+            MUTE_GROUP = STRUCT[str(U)].get('mute_group', 0)
+            B += struct.pack("<HHHHHHHHBBBBBB", 0x8000+K, 0x7F, 0x8000+K, 0x7F, 0x8000+K, 0x7F, 0x8000+K, 0x7F,  MOMENTARY, MUTE_GROUP, min(255, round(200. * numpy.power(10., STRUCT[str(U)].get('vol', 0.0) / 40.))), STRUCT[str(U)].get('pan', 0)+0x40, 0, 0x20)
             K += 1
         else:
-            B += struct.pack("<HHHHHHHHHBBBB",    0,   0x7F,    0,   0x7F,    0,   0x7F,    0,   0x7F,  0, 0x7F, 0x40, 0, 0x60)
+            B += struct.pack("<HHHHHHHHBBBBBB",    0,   0x7F,    0,   0x7F,    0,   0x7F,    0,   0x7F,  0, 0, 0x7F, 0x40, 0, 0x60)
     
     B += b'\x40\x40\x40\x80\x4A\x40\x40\x40\x40\x80\x40\x40\x00\x00'
     
@@ -203,6 +205,10 @@ if __name__=="__main__":
     #  pan:           values from -64 (full left) to +63 (full right)
     #  vol:           dB values (floating-point) from -92.0 to +4.2. Use -200. as
     #                       the "off" (no sound) setting.
+    #  momentary:     the "note-off" setting of Casio. 1 = note only sounds when
+    #                       key is pressed. 0 = key triggers sound which always
+    #                       completes.
+    #  mute_group:    0 for no muting, 1-?? otherwise.
     #
     S = {'60': {'file': "S1.wav", 'pitch_shift': -20, 'pan': -20, 'vol': -20.}}
   

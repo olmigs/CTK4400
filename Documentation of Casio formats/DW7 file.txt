@@ -73,8 +73,8 @@ do is make it sequential for each note (1, 2, 3, 4, etc....).
 136+J*16 - 137+J*16      8000+K if this note is assigned. 0 if not. (2-byte little-endian)
 138+J*16                 7F
 139+J*16                 00
-13A+J*16                 00
-13B+J*16                 00
+13A+J*16                 NOTE_OFF:    1=momentary, 0 (default) = triggered & sustained
+13B+J*16                 ASSIGN_GROUP:  0=none.
 13C+J*16                 VOL: takes values 00-FF, indicating output volume. A
                                  value C8 is set by the keyboard to newly recorded
                                  sounds so that value should be regarded as the
