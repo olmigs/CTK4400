@@ -1,7 +1,8 @@
 DW7 contains a recording of between 1 and 8 pitched or unpitched sound samples for
 the CTK-4400 keyboard, and assigns them to keys in a "drum kit" arrangement.
 
-All values below are in hexadecimal format.
+All integer values below are in hexadecimal format, except where suffixed by "d" (for
+"decimal").
 
 LEN[I] is the length in bytes of the I'th waveform recording (I=0...7).
 
@@ -49,7 +50,7 @@ in file
                                      for more about this value
 
 =================================================================================================
-====   The following 16 bytes are repeated 128 times, representing the 128 MIDI notes    ========
+====   The following 16 bytes are repeated 128d times, representing the 128d MIDI notes  ========
 ====   with the first one representing MIDI note 0 (C-1) and the last one representing   ========
 ====   MIDI note 7F (G9).                                                                ========
 
@@ -59,7 +60,7 @@ K is a number between 1 (or 0?) and 1FF that is defined for each note. Its value
 doesn't seem to matter, but it might need to be unique to each assigned note. Best thing to
 do is make it sequential for each note (1, 2, 3, 4, etc....).
 
-=========== START OF 128x REPETITION (OFFSET: 12A)   =============================================
+=========== START OF 128dx REPETITION (OFFSET: 12A)   ============================================
 
 12A+J*16 - 12B+J*16      8000+K if this note is assigned. K if not. (2-byte little-endian)
 12C+J*16                 7F
@@ -79,14 +80,14 @@ do is make it sequential for each note (1, 2, 3, 4, etc....).
                                  value C8 is set by the keyboard to newly recorded
                                  sounds so that value should be regarded as the
                                  "Normal" or baseline setting. Values 01-FF then
-                                 correspond to -96dB -- +4dB.
+                                 correspond to -96.0dB -- +4.2dB.
                               Set to 7F for unassigned notes.
 13D+J*16                 PAN:  7-bit unsigned value, indicating stereo panning.
                                  00=full left, 40=centre, 7F=full right.
 13E+J*16                 00
 13F+J*16                 20 if this note is assigned, 60 if not
 
-=========== END OF 128x REPETITION  (OFFSET:   C29) =============================================
+=========== END OF 128dx REPETITION  (OFFSET:   C29) ============================================
 
 
 
@@ -112,14 +113,14 @@ C37                      00
 
 
 =================================================================================================
-====   The following 38 bytes are repeated 128 times, corresponding to 128 MIDI notes.
+====   The following 38 bytes are repeated 128d times, corresponding to 128d MIDI notes.
 
 
-======= START OF 128x REPETITION  (OFFSET: C38)         ===========================
+======= START OF 128dx REPETITION  (OFFSET: C38)         ==========================
 
 
-C38+J*38 - C39+J*38      Pitch shift to apply to the sample. 16-bit signed little-endian value, in units
-                         of 1/512 semitones. E.g FE00 is shift down 1 semitone, E800 is down 1 octave, etc.
+C38+J*38 - C39+J*38      Pitch shift to apply to the sample. 16d-bit signed little-endian value, in units
+                         of 1/512d semitones. E.g FE00 is shift down 1 semitone, E800 is down 1 octave, etc.
                          Value of 0000 if no sample assigned.
 C3A+J*38                 00
 C3B+J*38                 20
@@ -178,7 +179,7 @@ C6E+J*38                 01
 C6F+J*38                 00
 
 
-======= END OF 128x REPETITION  (OFFSET: 2837)         =============================
+======= END OF 128dx REPETITION  (OFFSET: 2837)         ============================
 
 
 
@@ -279,7 +280,7 @@ C6F+J*38                 00
                             Note that Microsoft Wave files (.WAV files)
                             use 8-bit unsigned format (Min-Mid-Max is 00-7F-FF)
                             and so need to be re-encoded to be used here.
-                            16-bit and 32-bit Wave files use signed
+                            16d-bit and 32d-bit Wave files use signed
                             formats (8000-0000-7FFF and 80000000-00000000-7FFFFFFF
                             respectively).
 

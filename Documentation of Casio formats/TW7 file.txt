@@ -1,6 +1,6 @@
 TW7 contains a recording of a single pitched sound sample for the CTK-4400 keyboard.
 
-All values are in hexadecimal format.
+All integer values below are in hexadecimal format, except where suffixed by "d" (for "decimal").
 
 LEN is the length in bytes of the waveform recording portion of the file.
 
@@ -110,7 +110,7 @@ in file
                             Note that Microsoft Wave files (.WAV files)
                             use 8-bit unsigned format (Min-Mid-Max is 00-7F-FF)
                             and so need to be re-encoded to be used here.
-                            16-bit and 32-bit Wave files use signed
+                            16d-bit and 32d-bit Wave files use signed
                             formats (8000-0000-7FFF and 80000000-00000000-7FFFFFFF
                             respectively).
 
