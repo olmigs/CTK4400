@@ -62,6 +62,6 @@ def dw7_to_wav(INPUT : pathlib.Path, OUTPUT : pathlib.Path):
 
 
 if __name__=="__main__":
-    
+
     raise Exception("dw7_to_wav should be called as a function only")
 

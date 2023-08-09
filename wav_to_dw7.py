@@ -1,4 +1,3 @@
-
 import struct
 import wave
 import pathlib
@@ -7,115 +6,111 @@ import scipy
 import scipy.signal
 
 
+def log(msg):
+    print(f" <wtd> {msg}")
 
-def wav_to_dw7(STRUCT, OUTPUT : pathlib.Path, SLOT : int = 1):
+
+def est_file_size(sample_rate, bit_depth, channels, duration):
+    return sample_rate * (bit_depth / 8) * channels * duration
 
 
+def wav_to_dw7(STRUCT, OUTPUT: pathlib.Path, SLOT: int = 1):
     if SLOT not in (1, 2, 3):
         raise Exception("SLOT needs to be in 1 - 3")
 
-
     S = set()
     for KEY in STRUCT:
-        X = STRUCT[KEY].get('file', None)
+        X = STRUCT[KEY].get("file", None)
         if X is not None:
             S.add(X)
-  
+
     FILES = list(S)
-    
-    if len(FILES) not in [1,2,3,4,5,6,7,8]:
-        raise Exception(f"Need between 1 and 8 distinct file name inputs. Found {len(FILES)} distinct file names.")
-    
+
+    if len(FILES) not in [1, 2, 3, 4, 5, 6, 7, 8]:
+        raise Exception(
+            f"Need between 1 and 8 distinct file name inputs. Found {len(FILES)} distinct file names."
+        )
+
     LENGTHS = []
     BINARIES = []
-    
+
     TARGET_FREQ = 21410
-    
+
     for FF in FILES:
-
-
         with wave.open(str(FF), "rb") as f:
-            print(f.getsampwidth())
-            print(f.getframerate())
-            print("0x{0:X}".format(f.getnframes()))
-            
-            
+            log(f"sample width: {f.getsampwidth()}")
+            log(f"frame rate: {f.getframerate()}")
+            log("audio frames: " + "0x{0:X}".format(f.getnframes()))
+
             C = f.readframes(f.getnframes())
             Z_FRAMERATE = f.getframerate()
-            
-            
-            print(len(C))
-            
-            if f.getsampwidth() == 1:   # 8-Bit unsigned
+
+            log(f"audio frames read: {len(C)}")
+
+            if f.getsampwidth() == 1:  # 8-Bit unsigned
                 Z = (numpy.frombuffer(C, dtype=numpy.uint8) - 128).astype(numpy.int8)
-            elif f.getsampwidth() == 2:   # 16-Bit signed
+                sample_width = 8
+            elif f.getsampwidth() == 2:  # 16-Bit signed
                 Z = numpy.frombuffer(C, dtype=numpy.int16)
-            elif f.getsampwidth() == 4:   # 32-Bit signed
+                sample_width = 16
+            elif f.getsampwidth() == 4:  # 32-Bit signed
                 Z = numpy.frombuffer(C, dtype=numpy.int32)
+                sample_width = 32
             else:
                 raise Exception("Only 8-, 16- and 32-bit PCM wave formats supported")
-            
-            
-            
+
             # Choose the first channel only. From a stereo signal, this will be the
             # left one.
             # A stereo-to-mono conversion would be better, but this script is really
             # intended for mono inputs -- just do the simplest thing possible here.
 
             if f.getnchannels() != 1:
-                Z = Z[::f.getnchannels()]
-
-
+                Z = Z[:: f.getnchannels()]
 
         if Z_FRAMERATE == TARGET_FREQ:
-
             # No re-sampling required, we're already at the correct sample rate
             U = Z
 
         else:
-            print("Resampling from {0}".format(Z_FRAMERATE))
-            U = scipy.signal.resample(Z, int( float(TARGET_FREQ) / float(Z_FRAMERATE) * float(Z.size)  )  )
+            num_frames = int(float(TARGET_FREQ) / float(Z_FRAMERATE) * float(Z.size))
+            log("Resampling from {0}".format(Z_FRAMERATE))
+            log(
+                f"Estimated file size: {est_file_size(TARGET_FREQ, sample_width, 1, num_frames / float(TARGET_FREQ))} bytes"
+            )  # migstodo
+            U = scipy.signal.resample(Z, num_frames)
 
-        print(U)
-        print(max(U))
-        print(min(U))
+        # print(U)
+        # print(max(U))
+        # print(min(U))
 
         m = max(max(U), -min(U))
 
         if m <= 0:
-            raise Exception
+            raise Exception("Probably resampling failed")
 
         U = U * (127.5 / m)  # Scale to maximum extent
 
         V = U.astype(numpy.int8)
 
-        print(V)
-        print(max(V))
-        print(min(V))
+        # print(V)
+        # print(max(V))
+        # print(min(V))
 
         W = (V + 0).astype(numpy.uint8)
 
-        print(W)
-        print(max(W))
-        print(min(W))
-
-
+        # print(W)
+        # print(max(W))
+        # print(min(W))
 
         LEN = len(bytes(W))
-        
+
         if LEN > 0x3FFFF:
             # This is approximately 10s at 21410Hz. It may be worth trying longer than
             # this to see if it works?
             raise Exception(f"Input wave has {LEN} sample points which is too long!")
 
-
-
         BINARIES.append(bytes(W))
         LENGTHS.append(len(bytes(W)))
-
-
-
-
 
     """
     What are these? They appear to depend only on the position of the sample (i.e.
@@ -125,58 +120,114 @@ def wav_to_dw7(STRUCT, OUTPUT : pathlib.Path, SLOT : int = 1):
     available for DW7 content.
     """
     MAGIC_NUMBERS = [
-        ( bytes.fromhex("4F 62 0E F6 89"),  bytes.fromhex("E9") ),   # SLOT 1
-        ( bytes.fromhex("DB D4 50 97 69"),  bytes.fromhex("EF") ),   # SLOT 2
-        ( bytes.fromhex("E9 CE 01 C3 71"),  bytes.fromhex("0E") ),   # SLOT 3
-        ( bytes.fromhex("BE 18 B0 0E D4"),  bytes.fromhex("5C") ),   # SLOT 4
-        ( bytes.fromhex("E4 B0 31 A1 C2"),  bytes.fromhex("6C") ),   # SLOT 5
-        ( bytes.fromhex("8A 41 47 02 43"),  bytes.fromhex("00") ),   # SLOT 6
-        ( bytes.fromhex("51 67 47 02 40"),  bytes.fromhex("3F") ),   # SLOT 7
-        ( bytes.fromhex("93 AD FF FF 25"),  bytes.fromhex("53") ),   # SLOT 8
+        (bytes.fromhex("4F 62 0E F6 89"), bytes.fromhex("E9")),  # SLOT 1
+        (bytes.fromhex("DB D4 50 97 69"), bytes.fromhex("EF")),  # SLOT 2
+        (bytes.fromhex("E9 CE 01 C3 71"), bytes.fromhex("0E")),  # SLOT 3
+        (bytes.fromhex("BE 18 B0 0E D4"), bytes.fromhex("5C")),  # SLOT 4
+        (bytes.fromhex("E4 B0 31 A1 C2"), bytes.fromhex("6C")),  # SLOT 5
+        (bytes.fromhex("8A 41 47 02 43"), bytes.fromhex("00")),  # SLOT 6
+        (bytes.fromhex("51 67 47 02 40"), bytes.fromhex("3F")),  # SLOT 7
+        (bytes.fromhex("93 AD FF FF 25"), bytes.fromhex("53")),  # SLOT 8
     ]
 
-
-    B = b''
+    B = b""
 
     if SLOT in (1, 2, 3):
-        B += MAGIC_NUMBERS[SLOT+5][0] + "SmplDrm{0:d}        ".format(SLOT).encode('latin-1')
-        B += MAGIC_NUMBERS[SLOT+5][1]
+        B += MAGIC_NUMBERS[SLOT + 5][0] + "SmplDrm{0:d}        ".format(SLOT).encode(
+            "latin-1"
+        )
+        B += MAGIC_NUMBERS[SLOT + 5][1]
     else:
-        raise Exception
+        raise Exception("SLOT needs to be in 1 - 3")  # migstodo: redundant
 
-    K = 0x23   # Incrementing counter. Probably can be anything??
-    
+    K = 0x23  # Incrementing counter. Probably can be anything??
+
     for U in range(128):
-        if str(U) in STRUCT and STRUCT[str(U)].get('file', None) is not None:
-            MOMENTARY = STRUCT[str(U)].get('momentary', 0)
-            MUTE_GROUP = STRUCT[str(U)].get('mute_group', 0)
-            B += struct.pack("<HHHHHHHHBBBBBB", 0x8000+K, 0x7F, 0x8000+K, 0x7F, 0x8000+K, 0x7F, 0x8000+K, 0x7F,  MOMENTARY, MUTE_GROUP, min(255, round(200. * numpy.power(10., STRUCT[str(U)].get('vol', 0.0) / 40.))), STRUCT[str(U)].get('pan', 0)+0x40, 0, 0x20)
+        if str(U) in STRUCT and STRUCT[str(U)].get("file", None) is not None:
+            MOMENTARY = STRUCT[str(U)].get("momentary", 0)
+            MUTE_GROUP = STRUCT[str(U)].get("mute_group", 0)
+            B += struct.pack(
+                "<HHHHHHHHBBBBBB",
+                0x8000 + K,
+                0x7F,
+                0x8000 + K,
+                0x7F,
+                0x8000 + K,
+                0x7F,
+                0x8000 + K,
+                0x7F,
+                MOMENTARY,
+                MUTE_GROUP,
+                min(
+                    255,
+                    round(
+                        200.0 * numpy.power(10.0, STRUCT[str(U)].get("vol", 0.0) / 40.0)
+                    ),
+                ),
+                STRUCT[str(U)].get("pan", 0) + 0x40,
+                0,
+                0x20,
+            )
             K += 1
         else:
-            B += struct.pack("<HHHHHHHHBBBBBB",    0,   0x7F,    0,   0x7F,    0,   0x7F,    0,   0x7F,  0, 0, 0x7F, 0x40, 0, 0x60)
-    
-    B += b'\x40\x40\x40\x80\x4A\x40\x40\x40\x40\x80\x40\x40\x00\x00'
-    
+            B += struct.pack(
+                "<HHHHHHHHBBBBBB",
+                0,
+                0x7F,
+                0,
+                0x7F,
+                0,
+                0x7F,
+                0,
+                0x7F,
+                0,
+                0,
+                0x7F,
+                0x40,
+                0,
+                0x60,
+            )
+
+    B += b"\x40\x40\x40\x80\x4A\x40\x40\x40\x40\x80\x40\x40\x00\x00"
+
     for U in range(128):
-        if str(U) in STRUCT and STRUCT[str(U)].get('file', None) is not None:
-            SAMPLE_IDX = FILES.index(STRUCT[str(U)]['file'])
-            PITCH_SHIFT = STRUCT[str(U)].get('pitch_shift', 0.0)
-            B += struct.pack("h", int(512.*PITCH_SHIFT)) + bytes.fromhex("00 20 00 00 00 20 00 00 00 20 00 00 01 00 80 3F 00 00 80 3F FF 03 80 3E 40 00 00 00 FF 01 00 00 64 00 00 00 20 03 00 00 20 03") + struct.pack("<H", 0x8000+SAMPLE_IDX) + bytes.fromhex("00 7F 02 00 02 7F 00 7F 01 00")
+        if str(U) in STRUCT and STRUCT[str(U)].get("file", None) is not None:
+            SAMPLE_IDX = FILES.index(STRUCT[str(U)]["file"])
+            PITCH_SHIFT = STRUCT[str(U)].get("pitch_shift", 0.0)
+            B += (
+                struct.pack("h", int(512.0 * PITCH_SHIFT))
+                + bytes.fromhex(
+                    "00 20 00 00 00 20 00 00 00 20 00 00 01 00 80 3F 00 00 80 3F FF 03 80 3E 40 00 00 00 FF 01 00 00 64 00 00 00 20 03 00 00 20 03"
+                )
+                + struct.pack("<H", 0x8000 + SAMPLE_IDX)
+                + bytes.fromhex("00 7F 02 00 02 7F 00 7F 01 00")
+            )
         else:
-            B += struct.pack("h", 0)                     + bytes.fromhex("00 20 00 00 00 20 00 00 00 20 00 00 01 00 80 3F 00 00 80 3F FF 03 80 3E 40 00 00 00 FF 01 00 00 64 00 00 00 20 03 00 00 20 03") + struct.pack("<H", 0)  + bytes.fromhex("00 7F 02 00 02 7F 00 7F 01 00")
-    
+            B += (
+                struct.pack("h", 0)
+                + bytes.fromhex(
+                    "00 20 00 00 00 20 00 00 00 20 00 00 01 00 80 3F 00 00 80 3F FF 03 80 3E 40 00 00 00 FF 01 00 00 64 00 00 00 20 03 00 00 20 03"
+                )
+                + struct.pack("<H", 0)
+                + bytes.fromhex("00 7F 02 00 02 7F 00 7F 01 00")
+            )
+
     for U in range(8):
         if U < len(FILES):
             LEN = LENGTHS[U]
         else:
-            LEN = 0x526C   # Probably can be anything?
-            
-        B += bytes.fromhex("00 E8 00 20 00 00 00 20 00 00 00 00 00 00 00 00 00 00 22 00 00 00 00 00 00 00 22 00 00 00 00 00 00 00 22 00 00 00 00 00 00 00 22 00 00 00 00 00") + \
-                      struct.pack("<I", LEN-0x28) + \
-                      bytes.fromhex("00 00 02 00 00 ") + \
-                      struct.pack("<I", LEN-0x18)[:3] + \
-                      struct.pack("<I", LEN-0x08) + \
-                      bytes.fromhex("00 00 02 00 A1 53 3C 02 80 00 00 00")
+            LEN = 0x526C  # Probably can be anything?
+
+        B += (
+            bytes.fromhex(
+                "00 E8 00 20 00 00 00 20 00 00 00 00 00 00 00 00 00 00 22 00 00 00 00 00 00 00 22 00 00 00 00 00 00 00 22 00 00 00 00 00 00 00 22 00 00 00 00 00"
+            )
+            + struct.pack("<I", LEN - 0x28)
+            + bytes.fromhex("00 00 02 00 00 ")
+            + struct.pack("<I", LEN - 0x18)[:3]
+            + struct.pack("<I", LEN - 0x08)
+            + bytes.fromhex("00 00 02 00 A1 53 3C 02 80 00 00 00")
+        )
 
     for BB in BINARIES:
         B += BB
@@ -192,9 +243,7 @@ def wav_to_dw7(STRUCT, OUTPUT : pathlib.Path, SLOT : int = 1):
         f.write(B)
 
 
-
-if __name__=="__main__":
-  
+if __name__ == "__main__":
     # A dictionary of key values mapped to sounds.
     #
     #  Key:   MIDI pitch of the key which produces the sound. (E.g. 60 is the
@@ -210,7 +259,6 @@ if __name__=="__main__":
     #                       completes.
     #  mute_group:    0 for no muting, 1-?? otherwise.
     #
-    S = {'60': {'file': "S1.wav", 'pitch_shift': -20, 'pan': -20, 'vol': -20.}}
-  
-  
+    S = {"60": {"file": "S1.wav", "pitch_shift": -20, "pan": -20, "vol": -20.0}}
+
     wav_to_dw7(S, "1.dw7")
